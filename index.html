@@ -77,14 +77,70 @@
             width: 0%;
             transition: width 0.3s;
         }
+        .timer-bar {
+            background-color: #e9ecef;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            height: 20px;
+            overflow: hidden;
+        }
+        .timer {
+            height: 100%;
+            background-color: #28a745;
+            width: 100%;
+            transition: width 1s linear;
+        }
+        .timer.warning {
+            background-color: #ffc107;
+        }
+        .timer.danger {
+            background-color: #dc3545;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .timer-text {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .student-info {
+            text-align: left;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Enter in Knowledge World</h1>
         <img src="earth_logo.png" alt="Earth Logo" width="200">
-        <div>
-            <a href="#" class="button" id="startButton">Let's Start</a>
+        
+        <div id="login-form">
+            <h2>Student Information</h2>
+            <div class="form-group">
+                <label for="student-name">Your Name:</label>
+                <input type="text" id="student-name" class="form-control" placeholder="Enter your full name" required>
+            </div>
+            <div class="form-group">
+                <label for="student-email">Email (optional):</label>
+                <input type="email" id="student-email" class="form-control" placeholder="Enter your email">
+            </div>
+            <button class="button" id="login-button">Start Quiz</button>
         </div>
     </div>
     <script src="app.js"></script>
