@@ -210,6 +210,12 @@ const subjectData = {
     ]
 };
 
+// Authorized student credentials
+const validCredentials = [
+    { name: "Aryan Singh", password: "Ar2016" },
+    { name: "Aditya Singh", password: "Ad2017" }
+];
+
 // Global variables to track app state
 let currentView = 'login';
 let currentSubject = '';
@@ -221,27 +227,78 @@ let timerInterval = null;
 let timeLeft = 90;
 let studentName = '';
 let studentEmail = '';
+let studentPassword = '';
 let quizStartTime = null;
 let questionStartTime = null;
 let questionTimeTaken = [];
+let isRetry = false;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
     // Set up event listener for the login button
     document.getElementById('login-button').addEventListener('click', handleLogin);
+    
+    // Password visibility toggle
+    const passwordToggle = document.getElementById('password-toggle');
+    const passwordInput = document.getElementById('student-password');
+    
+    if (passwordToggle && passwordInput) {
+        passwordToggle.addEventListener('click', function() {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordToggle.textContent = '👁️‍🗨️';
+            } else {
+                passwordInput.type = 'password';
+                passwordToggle.textContent = '👁️';
+            }
+        });
+    }
+    
+    // Check for stored name and email and fill in the form
+    const storedName = localStorage.getItem('studentName');
+    const storedEmail = localStorage.getItem('studentEmail');
+    
+    if (storedName) {
+        const nameInput = document.getElementById('student-name');
+        if (nameInput) nameInput.value = storedName;
+    }
+    
+    if (storedEmail) {
+        const emailInput = document.getElementById('student-email');
+        if (emailInput) emailInput.value = storedEmail;
+    }
 });
 
-// Student login
+// Student login with password verification
 function handleLogin() {
     const nameInput = document.getElementById('student-name');
+    const passwordInput = document.getElementById('student-password');
     const emailInput = document.getElementById('student-email');
+    const passwordError = document.getElementById('password-error');
     
-    if (!nameInput.value.trim()) {
-        alert('Please enter your name to continue.');
+    if (!nameInput.value.trim() || !passwordInput.value.trim()) {
+        passwordError.style.display = 'block';
+        passwordError.textContent = 'Please enter both name and password.';
         return;
     }
     
+    // Validate credentials
+    const isValid = validCredentials.some(cred => 
+        cred.name.toLowerCase() === nameInput.value.trim().toLowerCase() && 
+        cred.password === passwordInput.value.trim()
+    );
+    
+    if (!isValid) {
+        passwordError.style.display = 'block';
+        passwordError.textContent = 'Invalid name or password!';
+        return;
+    }
+    
+    // Credentials valid, proceed
+    passwordError.style.display = 'none';
+    
     studentName = nameInput.value.trim();
+    studentPassword = passwordInput.value.trim();
     studentEmail = emailInput.value.trim();
     
     // Save to local storage
@@ -259,14 +316,28 @@ function goToHome() {
     
     const container = document.querySelector('.container');
     container.innerHTML = `
-        <h1>Enter in Knowledge World</h1>
-        <img src="earth_logo.png" alt="Earth Logo" width="200">
+        <h1>Welcome to Knowledge World</h1>
+        <div class="logo-container">
+            <div class="logo-background"></div>
+            <div class="stars"></div>
+            <img src="earth_logo.png" alt="Earth Logo" class="logo-image">
+        </div>
+        
+        <p class="welcome-text">Embark on an exciting journey of learning and discovery! Test your knowledge across various subjects and challenge yourself to excel!</p>
         
         <div id="login-form">
-            <h2>Student Information</h2>
+            <h2>Student Login</h2>
             <div class="form-group">
                 <label for="student-name">Your Name:</label>
                 <input type="text" id="student-name" class="form-control" placeholder="Enter your full name" required value="${studentName}">
+            </div>
+            <div class="form-group">
+                <label for="student-password">Password:</label>
+                <div class="password-field">
+                    <input type="password" id="student-password" class="form-control" placeholder="Enter your password" required>
+                    <button type="button" id="password-toggle" class="password-toggle">👁️</button>
+                </div>
+                <div id="password-error" class="error-message">Invalid name or password!</div>
             </div>
             <div class="form-group">
                 <label for="student-email">Email (optional):</label>
@@ -276,6 +347,22 @@ function goToHome() {
         </div>
     `;
     document.getElementById('login-button').addEventListener('click', handleLogin);
+    
+    // Password visibility toggle
+    const passwordToggle = document.getElementById('password-toggle');
+    const passwordInput = document.getElementById('student-password');
+    
+    if (passwordToggle && passwordInput) {
+        passwordToggle.addEventListener('click', function() {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordToggle.textContent = '👁️‍🗨️';
+            } else {
+                passwordInput.type = 'password';
+                passwordToggle.textContent = '👁️';
+            }
+        });
+    }
 }
 
 function showSubjectSelection() {
@@ -286,16 +373,29 @@ function showSubjectSelection() {
     container.innerHTML = `
         <div class="student-info">
             <strong>Student:</strong> ${studentName}
+            ${studentEmail ? ` | <strong>Email:</strong> ${studentEmail}` : ''}
         </div>
         <h1>Select a Subject</h1>
-        <div>
-            <a href="#" class="button" onclick="selectSubject('General Awareness')">General Awareness</a>
-            <a href="#" class="button" onclick="selectSubject('Science')">Science</a>
-            <a href="#" class="button" onclick="selectSubject('Math')">Math</a>
-            <a href="#" class="button" onclick="selectSubject('English')">English</a>
+        <p class="welcome-text">Choose a subject to begin your quiz adventure!</p>
+        
+        <div class="subject-buttons">
+            <button class="subject-button general" onclick="selectSubject('General Awareness')">
+                <i class="fas fa-globe"></i> General Awareness
+            </button>
+            <button class="subject-button science" onclick="selectSubject('Science')">
+                <i class="fas fa-flask"></i> Science
+            </button>
+            <button class="subject-button math" onclick="selectSubject('Math')">
+                <i class="fas fa-calculator"></i> Math
+            </button>
+            <button class="subject-button english" onclick="selectSubject('English')">
+                <i class="fas fa-book"></i> English
+            </button>
         </div>
+        
         <div>
-            <a href="#" class="button back-button" onclick="goToHome()">Back</a>
+            <button class="button back-button" onclick="goToHome()">Logout</button>
+            <button class="button" onclick="viewPreviousResults()">View My Results</button>
         </div>
     `;
 }
@@ -304,6 +404,7 @@ function selectSubject(subject) {
     currentView = 'quiz';
     currentSubject = subject;
     resetQuiz();
+    isRetry = false;
     questions = subjectData[subject];
     quizStartTime = new Date();
     
@@ -339,227 +440,43 @@ function confirmExit() {
     }
 }
 
-// Quiz functions
-function resetQuiz() {
-    currentQuestion = 0;
-    score = 0;
-    userAnswers = Array(questions.length).fill(-1);
-    questionTimeTaken = Array(questions.length).fill(0);
-    clearInterval(timerInterval);
-}
-
-function startTimer() {
-    clearInterval(timerInterval);
-    timeLeft = 90;
-    questionStartTime = new Date();
-    updateTimerDisplay();
+// View previous results
+function viewPreviousResults() {
+    const allResults = JSON.parse(localStorage.getItem('quizResults') || '[]');
+    const studentResults = allResults.filter(result => 
+        result.student.toLowerCase() === studentName.toLowerCase()
+    );
     
-    timerInterval = setInterval(function() {
-        timeLeft--;
-        updateTimerDisplay();
-        
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            // Auto-submit this question if time runs out
-            const notAnswered = userAnswers[currentQuestion] === -1;
-            if (notAnswered) {
-                // If no answer selected, record as incorrect
-                userAnswers[currentQuestion] = -2; // special code for timeout
-            }
-            questionTimeTaken[currentQuestion] = 90; // Max time
-            handleNextQuestion();
-        }
-    }, 1000);
-}
-
-function updateTimerDisplay() {
-    const timerText = document.getElementById('timer-text');
-    const timerBar = document.getElementById('timer');
-    
-    timerText.textContent = `Time left: ${timeLeft} seconds`;
-    
-    // Update timer bar width
-    const percentage = (timeLeft / 90) * 100;
-    timerBar.style.width = `${percentage}%`;
-    
-    // Update color based on time remaining
-    if (timeLeft <= 15) {
-        timerBar.className = 'timer danger';
-    } else if (timeLeft <= 30) {
-        timerBar.className = 'timer warning';
-    } else {
-        timerBar.className = 'timer';
-    }
-}
-
-function showQuestion() {
-    const quizContainer = document.getElementById('quizContainer');
-    
-    if (currentQuestion < questions.length) {
-        const q = questions[currentQuestion];
-        const progressPercent = (currentQuestion / questions.length) * 100;
-        document.getElementById('progress').style.width = `${progressPercent}%`;
-        
-        let optionsHTML = '';
-        q.options.forEach((option, index) => {
-            const isSelected = userAnswers[currentQuestion] === index;
-            optionsHTML += `
-                <button class="option-button ${isSelected ? 'selected' : ''}" 
-                        data-index="${index}" 
-                        onclick="selectAnswer(${index})">
-                    ${String.fromCharCode(97 + index)}) ${option}
-                </button>
-            `;
-        });
-        
-        quizContainer.innerHTML = `
-            <div class="question-text">
-                <strong>${currentQuestion + 1}. ${q.question}</strong>
-            </div>
-            <div class="options-container">
-                ${optionsHTML}
-            </div>
-        `;
-        
-        // Update Next button text
-        const nextButton = document.getElementById('nextButton');
-        nextButton.textContent = currentQuestion === questions.length - 1 ? 'Finish Quiz' : 'Next';
-        
-        // Reset timer for this question
-        startTimer();
-    } else {
-        showResults();
-    }
-}
-
-function selectAnswer(index) {
-    userAnswers[currentQuestion] = index;
-    
-    // Update selected button UI
-    const buttons = document.querySelectorAll('.option-button');
-    buttons.forEach(button => {
-        button.classList.remove('selected');
-        if (parseInt(button.dataset.index) === index) {
-            button.classList.add('selected');
-        }
-    });
-}
-
-function handleNextQuestion() {
-    clearInterval(timerInterval);
-    
-    // Calculate time taken for this question
-    const timeSpent = 90 - timeLeft;
-    questionTimeTaken[currentQuestion] = timeSpent;
-    
-    // Check if an answer is selected or if it timed out
-    if (userAnswers[currentQuestion] === -1) {
-        alert('Please select an answer before proceeding.');
-        startTimer(); // Restart the timer for this question
+    if (studentResults.length === 0) {
+        alert("You haven't taken any quizzes yet!");
         return;
     }
     
-    // Calculate score if an actual answer was selected (not timeout)
-    if (userAnswers[currentQuestion] !== -2) {
-        if (userAnswers[currentQuestion] === questions[currentQuestion].correct) {
-            score += 2;
-        } else {
-            score -= 0.5;
-        }
-    }
-    
-    currentQuestion++;
-    if (currentQuestion < questions.length) {
-        showQuestion();
-    } else {
-        showResults();
-    }
-}
-
-function showResults() {
-    clearInterval(timerInterval);
-    const quizEndTime = new Date();
-    const totalQuizTime = Math.floor((quizEndTime - quizStartTime) / 1000); // in seconds
-    
     const container = document.querySelector('.container');
-    
     let resultsHTML = `
         <div class="student-info">
             <strong>Student:</strong> ${studentName}
-            ${studentEmail ? `| <strong>Email:</strong> ${studentEmail}` : ''}
+            ${studentEmail ? ` | <strong>Email:</strong> ${studentEmail}` : ''}
         </div>
-        <h1>Quiz Results - ${currentSubject}</h1>
-        <div class="result-container">
-            <h2>Your Score: ${score} / ${questions.length * 2}</h2>
-            <p>You answered ${userAnswers.filter((answer, index) => answer === questions[index].correct).length} 
-               out of ${questions.length} questions correctly.</p>
-            <p>Total time: ${formatTime(totalQuizTime)}</p>
-        </div>
-        <h3>Detailed Results:</h3>
+        <h1>Your Quiz Results</h1>
     `;
     
-    questions.forEach((q, index) => {
-        const userAnswer = userAnswers[index];
-        let isCorrect = false;
-        let userAnswerText = "Not answered (timeout)";
-        
-        if (userAnswer >= 0) {
-            isCorrect = userAnswer === q.correct;
-            userAnswerText = q.options[userAnswer];
-        }
+    studentResults.forEach((result, index) => {
+        const date = new Date(result.date);
+        const formattedDate = `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
+        const percentScore = ((result.score / result.maxScore) * 100).toFixed(1);
         
         resultsHTML += `
-            <div class="result-container" style="text-align: left; margin-bottom: 10px;">
-                <p><strong>Question ${index + 1}:</strong> ${q.question}</p>
-                <p>Your Answer: ${userAnswerText}</p>
-                <p>Correct Answer: ${q.options[q.correct]}</p>
-                <p>Time taken: ${questionTimeTaken[index]} seconds</p>
-                <p style="color: ${isCorrect ? 'green' : 'red'}">
-                    ${isCorrect ? '✓ Correct' : '✗ Incorrect'}
-                </p>
+            <div class="result-container">
+                <h3>${result.subject} Quiz - ${formattedDate}</h3>
+                <p><strong>Score:</strong> ${result.score} / ${result.maxScore} (${percentScore}%)</p>
+                <p><strong>Correct Answers:</strong> ${result.correctAnswers} out of ${result.totalQuestions}</p>
+                <p><strong>Total Time:</strong> ${formatTime(result.totalTime)}</p>
+                <button class="button" onclick="viewDetailedResult(${index})">View Details</button>
             </div>
         `;
     });
     
     resultsHTML += `
         <div>
-            <button class="button" onclick="selectSubject('${currentSubject}')">Retry Quiz</button>
-            <button class="button back-button" onclick="showSubjectSelection()">Back to Subjects</button>
-            <button class="button back-button" onclick="goToHome()">Back to Home</button>
-        </div>
-    `;
-    
-    container.innerHTML = resultsHTML;
-    
-    // Store results in localStorage
-    saveQuizResults(totalQuizTime);
-}
-
-function formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}m ${remainingSeconds}s`;
-}
-
-// Function to save results to localStorage
-function saveQuizResults(totalTime) {
-    const results = {
-        student: studentName,
-        email: studentEmail,
-        subject: currentSubject,
-        score: score,
-        maxScore: questions.length * 2,
-        correctAnswers: userAnswers.filter((answer, index) => answer === questions[index].correct).length,
-        totalQuestions: questions.length,
-        totalTime: totalTime,
-        date: new Date().toISOString(),
-        questionTimeTaken: questionTimeTaken
-    };
-    
-    // Get existing results or initialize new array
-    let allResults = JSON.parse(localStorage.getItem('quizResults') || '[]');
-    allResults.push(results);
-    
-    // Save back to localStorage
-    localStorage.setItem('quizResults', JSON.stringify(allResults));
-}
+            <button class="button back
